@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">media3をつかったバックグラウンド再生</string>
+    <string name="play">再生</string>
+    <string name="pause">一時停止</string>
+</resources>
