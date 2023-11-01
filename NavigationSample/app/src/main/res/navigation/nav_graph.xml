@@ -12,7 +12,11 @@
         tools:layout="@layout/fragment_home" >
         <action
             android:id="@+id/action_homeFragment_to_secondFragment"
-            app:destination="@id/secondFragment" />
+            app:destination="@id/secondFragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/faid_out"
+            app:popEnterAnim="@anim/slide_in_right"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
     <fragment
         android:id="@+id/secondFragment"
@@ -34,5 +38,9 @@
         <action
             android:id="@+id/action_threadFragment_to_secondFragment"
             app:destination="@id/secondFragment" />
+        <argument
+            android:name="choice"
+            app:argType="integer"
+            android:defaultValue="0" />
     </fragment>
 </navigation>
