@@ -30,17 +30,16 @@ class SecondFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.button.setOnClickListener{ toBack() }
+
         binding.check1.setOnClickListener{ toNext(1) }
         binding.check2.setOnClickListener{ toNext(2) }
         binding.check3.setOnClickListener{ toNext(3) }
         binding.check4.setOnClickListener{ toNext(4) }
     }
-    private fun toBack() {
-        findNavController().navigate(R.id.action_secondFragment_to_homeFragment)
-    }
+
     private fun toNext(choice: Int) {
-        val bundle = bundleOf("choice" to choice)
-        findNavController().navigate(R.id.action_secondFragment_to_threadFragment, bundle)
+        val action = SecondFragmentDirections.actionSecondFragmentToThreadFragment(choice)
+        findNavController().navigate(action)
     }
+
 }
