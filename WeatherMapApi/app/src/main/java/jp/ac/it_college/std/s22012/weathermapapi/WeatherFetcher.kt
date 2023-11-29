@@ -1,3 +1,4 @@
+// WeatherFetcher.kt
 package jp.ac.it_college.std.s22012.weathermapapi
 
 import android.os.AsyncTask
@@ -81,6 +82,4 @@ class WeatherFetcher(private val apiKey: String, private val listener: OnWeather
         }
     }
 }
-
-
 

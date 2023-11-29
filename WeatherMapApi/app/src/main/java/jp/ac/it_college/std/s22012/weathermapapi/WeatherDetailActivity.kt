@@ -1,10 +1,9 @@
-
 package jp.ac.it_college.std.s22012.weathermapapi
+
 
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-
 
 class WeatherDetailActivity : AppCompatActivity(), WeatherFetcher.OnWeatherFetchListener {
 
@@ -54,6 +53,7 @@ class WeatherDetailActivity : AppCompatActivity(), WeatherFetcher.OnWeatherFetch
         errorTextView.text = errorMessage
     }
 }
+
 
 
 
