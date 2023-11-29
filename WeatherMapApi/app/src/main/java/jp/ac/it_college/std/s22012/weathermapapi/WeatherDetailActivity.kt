@@ -1,34 +1,61 @@
+
 package jp.ac.it_college.std.s22012.weathermapapi
 
 import android.os.Bundle
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import jp.ac.it_college.std.s22012.weathermapapi.databinding.FragmentWeatherDetailActivityBinding
 
-// WeatherDetailActivity
 
-class WeatherDetailActivity : AppCompatActivity() {
-    companion object {
-        const val EXTRA_SELECTED_PREFECTURE = "extra_selected_prefecture"
-    }
+class WeatherDetailActivity : AppCompatActivity(), WeatherFetcher.OnWeatherFetchListener {
 
-    private lateinit var binding: FragmentWeatherDetailActivityBinding
+    private val apiKey = BuildConfig.APP_ID // API キー
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = FragmentWeatherDetailActivityBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_weather_detail)
 
-        val selectedPrefecture = intent.getStringExtra(EXTRA_SELECTED_PREFECTURE)
+        // MainActivity から選択された都市名を受け取る
+        val selectedCity = intent.getStringExtra("EXTRA_SELECTED_CITY")
 
-        // 選択された都道府県に基づいて天気情報を取得し、表示するメソッドを呼び出す
-        getWeatherForLocation(selectedPrefecture)
+        // 天気情報を取得して表示
+        getWeatherForLocation(selectedCity)
     }
 
     private fun getWeatherForLocation(location: String?) {
-        // OpenWeatherMap APIを使用して、選択された場所の天気情報を取得するコードを追加
-        // ネットワークリクエストや天気情報の処理は先程の例を参考にしてください
-        // 結果を画面のViewに表示する
-        binding.weatherTextView.text = "天気情報がここに表示されます。"
+        WeatherFetcher(apiKey, this).execute(location)
+    }
+
+    override fun onWeatherFetch(weatherData: WeatherData) {
+        // 天気情報を画面に表示する処理
+        updateUI(weatherData)
+    }
+
+    override fun onWeatherFetchError(errorMessage: String) {
+        // エラーを画面に表示する処理
+        showError(errorMessage)
+    }
+
+    private fun updateUI(weatherData: WeatherData) {
+        // 天気情報を画面に表示する処理をここに追加
+        val cityNameTextView: TextView = findViewById(R.id.cityNameTextView)
+        val temperatureTextView: TextView = findViewById(R.id.temperatureTextView)
+        val descriptionTextView: TextView = findViewById(R.id.descriptionTextView)
+        val humidityTextView: TextView = findViewById(R.id.humidityTextView)
+
+        cityNameTextView.text = weatherData.cityName
+        temperatureTextView.text = getString(R.string.temperature, weatherData.temperature)
+        descriptionTextView.text = getString(R.string.description, weatherData.description)
+        humidityTextView.text = getString(R.string.humidity, weatherData.humidity)
+    }
+
+    private fun showError(errorMessage: String) {
+        // エラーを画面に表示する処理をここに追加
+        val errorTextView: TextView = findViewById(R.id.errorTextView)
+        errorTextView.text = errorMessage
     }
 }
+
+
+
+
 
