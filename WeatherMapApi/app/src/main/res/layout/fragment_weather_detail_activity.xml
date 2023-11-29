@@ -1,0 +1,22 @@
+<!-- res/layout/fragment_weather_detail_activity.xml -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".WeatherDetailActivity">
+
+    <TextView
+        android:id="@+id/weatherTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="天気情報がここに表示されます。"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- 他にも必要なレイアウト要素があれば追加 -->
+
+</LinearLayout>
