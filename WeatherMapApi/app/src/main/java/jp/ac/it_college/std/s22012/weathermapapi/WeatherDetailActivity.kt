@@ -34,7 +34,7 @@ class WeatherDetailActivity : AppCompatActivity() {
 
         override fun doInBackground(vararg params: String): String? {
             val locationId = params[0]
-            val apiKey = BuildConfig.APP_ID // ここにOpenWeatherMapのAPIキーを設定
+            val apiKey = BuildConfig.APP_ID 
 
             val apiUrl = "https://api.openweathermap.org/data/2.5/weather?id=$locationId&appid=$apiKey&lang=ja"
 
@@ -66,8 +66,7 @@ class WeatherDetailActivity : AppCompatActivity() {
             if (result != null) {
                 parseWeatherData(result)
             } else {
-                // エラー時の処理
-                // 例: エラーメッセージを表示する
+               
                 cityNameTextView.text = "エラーが発生しました"
             }
         }
@@ -78,7 +77,7 @@ class WeatherDetailActivity : AppCompatActivity() {
                 val cityName = jsonObject.getString("name")
                 val main = jsonObject.getJSONObject("main")
 
-                // ケルビンから摂氏に変換
+               
                 val temperatureKelvin = main.getDouble("temp")
                 val temperatureCelsius = temperatureKelvin - 273.15
 
@@ -86,7 +85,7 @@ class WeatherDetailActivity : AppCompatActivity() {
                 val weatherObject = weatherArray.getJSONObject(0)
                 val description = weatherObject.getString("description")
 
-                // 翻訳が必要なデータを使ってWeatherDataオブジェクトを作成
+       
                 val weatherData = WeatherData(
                     cityName,
                     temperatureCelsius,
@@ -94,12 +93,11 @@ class WeatherDetailActivity : AppCompatActivity() {
                     main.getInt("humidity")
                 )
 
-                // UIにデータを表示
+               
                 displayWeatherData(weatherData)
             } catch (e: Exception) {
                 e.printStackTrace()
-                // エラー時の処理
-                // 例: エラーメッセージを表示する
+              
                 cityNameTextView.text = "エラーが発生しました"
             }
         }
