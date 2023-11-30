@@ -1,120 +1,93 @@
+// WeatherDetailActivity.kt
 package jp.ac.it_college.std.s22012.weathermapapi
 
-import android.os.AsyncTask
 import android.os.Bundle
+import android.widget.ArrayAdapter
+import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class WeatherDetailActivity : AppCompatActivity() {
+class WeatherDetailActivity : AppCompatActivity(), WeatherFetcher.OnWeatherFetchListener {
 
-    private lateinit var cityNameTextView: TextView
-    private lateinit var temperatureTextView: TextView
-    private lateinit var descriptionTextView: TextView
-    private lateinit var humidityTextView: TextView
+    private val apiKey = BuildConfig.APP_ID // API キー
+    private val weatherFetcher = WeatherFetcher(apiKey, this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather_detail)
 
-        cityNameTextView = findViewById(R.id.cityNameTextView)
-        temperatureTextView = findViewById(R.id.temperatureTextView)
-        descriptionTextView = findViewById(R.id.descriptionTextView)
-        humidityTextView = findViewById(R.id.humidityTextView)
+        // MainActivity から選択された都市のデータを受け取る
+        val selectedCity = intent.getStringExtra("EXTRA_SELECTED_CITY")
 
-        val selectedCityId = intent.getIntExtra("EXTRA_SELECTED_CITY_ID", 0)
-        FetchWeatherTask().execute(selectedCityId.toString())
+        if (selectedCity != null) {
+            val locationId = CityDataList.getLocationId(selectedCity)
+
+            if (locationId != null) {
+                // locationIdを基に天気データを取得
+                fetch5DayWeatherData(locationId.toString())
+            } else {
+                // locationIdがnullの場合の処理
+                showError("無効な都市データです")
+            }
+        } else {
+            // selectedCityがnullの場合の処理
+            showError("都市データが選択されていません")
+        }
     }
 
-    private inner class FetchWeatherTask : AsyncTask<String, Void, String>() {
+    private fun fetch5DayWeatherData(locationId: String) {
+        CoroutineScope(Dispatchers.Main).launch {
+            weatherFetcher.fetch5DayWeatherData(locationId)
+        }
+    }
 
-        override fun doInBackground(vararg params: String): String? {
-            val locationId = params[0]
-            val apiKey = BuildConfig.APP_ID // ここにOpenWeatherMapのAPIキーを設定
+    override fun onWeatherFetchList(weatherDataList: List<WeatherData>) {
+        // UI更新はメインスレッドで行う
+        runOnUiThread {
+            if (weatherDataList.isNotEmpty()) {
+                updateUI(weatherDataList)
+            } else {
+                showError("利用可能な天気データがありません")
+            }
+        }
+    }
 
-            val apiUrl = "https://api.openweathermap.org/data/2.5/weather?id=$locationId&appid=$apiKey&lang=ja"
+    override fun onWeatherFetchError(errorMessage: String) {
+        // エラーを画面に表示する処理
+        showError(errorMessage)
+    }
 
-            return try {
-                val url = URL(apiUrl)
-                val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
-                val inputStreamReader = InputStreamReader(connection.inputStream)
-                val bufferedReader = BufferedReader(inputStreamReader)
+    private fun updateUI(weatherDataList: List<WeatherData>) {
+        val listView: ListView = findViewById(R.id.weatherListView)
 
-                val stringBuilder = StringBuilder()
-                var line: String?
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_list_item_1,
+            weatherDataList.flatMap { weatherData ->
+                val mainInfo = "${weatherData.cityName}: " +
+                        "最高気温: ${weatherData.maxTemperatureCelsius.toInt()}°C, " +
+                        "最低気温: ${weatherData.minTemperatureCelsius.toInt()}°C, " +
+                        "\n天気: ${weatherData.description}, " +
+                        "\n湿度: ${weatherData.humidity}%"
 
-                while (bufferedReader.readLine().also { line = it } != null) {
-                    stringBuilder.append(line)
+                val hourlyInfo = weatherData.hourlyForecasts.joinToString("\n") { forecast ->
+                    "時間: ${forecast.time}, 気温: ${forecast.temperature.toInt()}°C, 天気: ${forecast.description}"
                 }
 
-                bufferedReader.close()
-                inputStreamReader.close()
-
-                stringBuilder.toString()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                null
+                listOf(mainInfo, hourlyInfo)
             }
-        }
+        )
+        listView.adapter = adapter
+    }
 
-        override fun onPostExecute(result: String?) {
-            super.onPostExecute(result)
-            if (result != null) {
-                parseWeatherData(result)
-            } else {
-                // エラー時の処理
-                // 例: エラーメッセージを表示する
-                cityNameTextView.text = "エラーが発生しました"
-            }
-        }
-
-        private fun parseWeatherData(data: String) {
-            try {
-                val jsonObject = JSONObject(data)
-                val cityName = jsonObject.getString("name")
-                val main = jsonObject.getJSONObject("main")
-
-                // ケルビンから摂氏に変換
-                val temperatureKelvin = main.getDouble("temp")
-                val temperatureCelsius = temperatureKelvin - 273.15
-
-                val weatherArray = jsonObject.getJSONArray("weather")
-                val weatherObject = weatherArray.getJSONObject(0)
-                val description = weatherObject.getString("description")
-
-                // 翻訳が必要なデータを使ってWeatherDataオブジェクトを作成
-                val weatherData = WeatherData(
-                    cityName,
-                    temperatureCelsius,
-                    description,
-                    main.getInt("humidity")
-                )
-
-                // UIにデータを表示
-                displayWeatherData(weatherData)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                // エラー時の処理
-                // 例: エラーメッセージを表示する
-                cityNameTextView.text = "エラーが発生しました"
-            }
-        }
-
-        private fun displayWeatherData(weatherData: WeatherData) {
-            cityNameTextView.text = weatherData.cityName
-            temperatureTextView.text = "${weatherData.temperature.toInt()} ℃"
-            descriptionTextView.text = weatherData.description
-            humidityTextView.text = "湿度: ${weatherData.humidity}%"
-        }
+    private fun showError(errorMessage: String) {
+        // エラーを画面に表示する処理をここに追加
+        val errorTextView: TextView = findViewById(R.id.errorTextView)
+        errorTextView.text = errorMessage
     }
 }
-
-
-
-
 
 

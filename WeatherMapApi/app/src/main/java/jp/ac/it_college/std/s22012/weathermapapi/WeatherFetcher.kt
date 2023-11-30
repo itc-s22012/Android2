@@ -1,6 +1,7 @@
 package jp.ac.it_college.std.s22012.weathermapapi
 
-import android.os.AsyncTask
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -10,16 +11,18 @@ import java.net.URL
 class WeatherFetcher(
     private val apiKey: String,
     private val onWeatherFetchListener: OnWeatherFetchListener
-) : AsyncTask<String, Void, String>() {
+) {
 
-    override fun doInBackground(vararg params: String): String? {
-        val location = params[0]
-        val locationId = CityDataList.getLocationId(location)
+    interface OnWeatherFetchListener {
+        fun onWeatherFetchList(weatherDataList: List<WeatherData>)
+        fun onWeatherFetchError(errorMessage: String)
+    }
 
-        if (locationId != null) {
-            val apiUrl = "https://api.openweathermap.org/data/2.5/weather?id=$locationId&appid=$apiKey&lang=ja"
+    suspend fun fetch5DayWeatherData(locationId: String) {
+        withContext(Dispatchers.IO) {
+            val apiUrl = "https://api.openweathermap.org/data/2.5/forecast?id=$locationId&appid=$apiKey&lang=ja"
 
-            return try {
+            try {
                 val url = URL(apiUrl)
                 val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
                 val inputStreamReader = InputStreamReader(connection.inputStream)
@@ -35,60 +38,57 @@ class WeatherFetcher(
                 bufferedReader.close()
                 inputStreamReader.close()
 
-                stringBuilder.toString()
+                val weatherDataList = parse5DayWeatherData(stringBuilder.toString())
+
+                // UI更新はメインスレッドで行う
+                withContext(Dispatchers.Main) {
+                    onWeatherFetchListener.onWeatherFetchList(weatherDataList)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
-                null
+                // UI更新はメインスレッドで行う
+                withContext(Dispatchers.Main) {
+                    onWeatherFetchListener.onWeatherFetchError("Error fetching weather data")
+                }
             }
-        } else {
-            onWeatherFetchListener.onWeatherFetchError("Invalid location: $location")
-        }
-
-        return null
-    }
-
-    override fun onPostExecute(result: String?) {
-        super.onPostExecute(result)
-        if (result != null) {
-            parseWeatherData(result)
-        } else {
-            onWeatherFetchListener.onWeatherFetchError("Error fetching weather data")
         }
     }
 
-    private fun parseWeatherData(data: String) {
+
+
+    private fun parse5DayWeatherData(data: String): List<WeatherData> {
+        val weatherDataList = mutableListOf<WeatherData>()
+
         try {
             val jsonObject = JSONObject(data)
-            val cityName = jsonObject.getString("name")
-            val main = jsonObject.getJSONObject("main")
 
-            // ケルビンから摂氏に変換
-            val temperatureKelvin = main.getDouble("temp")
-            val temperatureCelsius = temperatureKelvin - 273.15
+            val cityName = jsonObject.getJSONObject("city").getString("name")
 
-            val weatherArray = jsonObject.getJSONArray("weather")
-            val weatherObject = weatherArray.getJSONObject(0)
-            val description = weatherObject.getString("description")
+            val forecastList = jsonObject.getJSONArray("list")
+            for (i in 0 until forecastList.length()) {
+                val forecastObject = forecastList.getJSONObject(i)
+                val dateTime = forecastObject.getString("dt_txt")
+                val temperatureObject = forecastObject.getJSONObject("main")
+                val temperature = temperatureObject.getDouble("temp")
+                val weatherArray = forecastObject.getJSONArray("weather")
+                val description = weatherArray.getJSONObject(0).getString("description")
 
-            // 翻訳が必要なデータを使ってWeatherDataオブジェクトを作成
-            val weatherData = WeatherData(
-                cityName,
-                temperatureCelsius,
-                description,
-                main.getInt("humidity")
-            )
+                val weatherData = WeatherData(
+                    cityName,
+                    temperature,
+                    temperature,
+                    description,
+                    0.0,
+                    listOf(HourlyForecast(dateTime, temperature, description))
+                )
+                weatherDataList.add(weatherData)
+            }
 
-            onWeatherFetchListener.onWeatherFetch(weatherData)
         } catch (e: Exception) {
             e.printStackTrace()
-            onWeatherFetchListener.onWeatherFetchError("Error parsing weather data")
         }
-    }
 
-    interface OnWeatherFetchListener {
-        fun onWeatherFetch(weatherData: WeatherData)
-        fun onWeatherFetchError(errorMessage: String)
+        return weatherDataList
     }
 }
-
 

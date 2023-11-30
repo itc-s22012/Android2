@@ -1,10 +1,13 @@
 package jp.ac.it_college.std.s22012.weathermapapi
 
+import java.io.Serializable
+
 
 data class CityData(
     val locationId: Int,
     val name: String
 )
+
 
 object CityDataList {
     val cityList = listOf(
