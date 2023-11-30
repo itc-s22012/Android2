@@ -1,0 +1,10 @@
+<!-- res/values/strings.xml -->
+<resources>
+    <string name="app_name">Name</string>
+    <string name="temperature">気温: %d℃</string>
+    <string name="description">天気: %s</string>
+    <string name="humidity">湿度: %d％</string>
+    <!-- 他にも必要なリソースがあれば追加 -->
+</resources>
+
+
