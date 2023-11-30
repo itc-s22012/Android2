@@ -62,7 +62,7 @@ class WeatherFetcher(
             val cityName = jsonObject.getString("name")
             val main = jsonObject.getJSONObject("main")
 
-            // ケルビンから摂氏に変換
+            
             val temperatureKelvin = main.getDouble("temp")
             val temperatureCelsius = temperatureKelvin - 273.15
 
@@ -70,7 +70,7 @@ class WeatherFetcher(
             val weatherObject = weatherArray.getJSONObject(0)
             val description = weatherObject.getString("description")
 
-            // 翻訳が必要なデータを使ってWeatherDataオブジェクトを作成
+          
             val weatherData = WeatherData(
                 cityName,
                 temperatureCelsius,
