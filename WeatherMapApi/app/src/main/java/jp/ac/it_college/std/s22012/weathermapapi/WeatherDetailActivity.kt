@@ -19,21 +19,18 @@ class WeatherDetailActivity : AppCompatActivity(), WeatherFetcher.OnWeatherFetch
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather_detail)
 
-        // MainActivity から選択された都市のデータを受け取る
+   
         val selectedCity = intent.getStringExtra("EXTRA_SELECTED_CITY")
 
         if (selectedCity != null) {
             val locationId = CityDataList.getLocationId(selectedCity)
 
             if (locationId != null) {
-                // locationIdを基に天気データを取得
                 fetch5DayWeatherData(locationId.toString())
             } else {
-                // locationIdがnullの場合の処理
                 showError("無効な都市データです")
             }
         } else {
-            // selectedCityがnullの場合の処理
             showError("都市データが選択されていません")
         }
     }
@@ -45,7 +42,6 @@ class WeatherDetailActivity : AppCompatActivity(), WeatherFetcher.OnWeatherFetch
     }
 
     override fun onWeatherFetchList(weatherDataList: List<WeatherData>) {
-        // UI更新はメインスレッドで行う
         runOnUiThread {
             if (weatherDataList.isNotEmpty()) {
                 updateUI(weatherDataList)
@@ -56,7 +52,6 @@ class WeatherDetailActivity : AppCompatActivity(), WeatherFetcher.OnWeatherFetch
     }
 
     override fun onWeatherFetchError(errorMessage: String) {
-        // エラーを画面に表示する処理
         showError(errorMessage)
     }
 
@@ -84,7 +79,6 @@ class WeatherDetailActivity : AppCompatActivity(), WeatherFetcher.OnWeatherFetch
     }
 
     private fun showError(errorMessage: String) {
-        // エラーを画面に表示する処理をここに追加
         val errorTextView: TextView = findViewById(R.id.errorTextView)
         errorTextView.text = errorMessage
     }
