@@ -40,13 +40,11 @@ class WeatherFetcher(
 
                 val weatherDataList = parse5DayWeatherData(stringBuilder.toString())
 
-                // UI更新はメインスレッドで行う
                 withContext(Dispatchers.Main) {
                     onWeatherFetchListener.onWeatherFetchList(weatherDataList)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                // UI更新はメインスレッドで行う
                 withContext(Dispatchers.Main) {
                     onWeatherFetchListener.onWeatherFetchError("Error fetching weather data")
                 }
